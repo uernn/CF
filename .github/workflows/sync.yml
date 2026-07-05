@@ -1,0 +1,34 @@
+name: Auto Fetch & Deduplicate IPv4 List
+
+on:
+  schedule:
+    # 每天 UTC 时间 0 点（北京时间早上 8 点）自动执行一次
+    - cron: '0 0 * * *'
+  workflow_dispatch: # 允许你在 GitHub 网页端手动点击运行
+
+jobs:
+  update-file:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # 再次声明写入权限，确保万无一失
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch and Deduplicate IP list
+        run: |
+          curl -sL https://bestcf.pages.dev/xinyitang3/ipv4.txt | tr -d '\r' | awk 'NF && !seen[$0]++' > ipv4.txt
+
+      - name: Commit and push if changed
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add ipv4.txt
+          
+          if git diff --staged --quiet; then
+            echo "文件内容与昨日相同，无需重复提交"
+          else
+            git commit -m "Auto-update and deduplicate ipv4.txt"
+            git push
+          fi
