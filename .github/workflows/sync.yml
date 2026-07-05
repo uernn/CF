@@ -2,9 +2,9 @@ name: Auto Fetch & Deduplicate IPv4 List
 
 on:
   schedule:
-    # 每天 UTC 时间 0 点（北京时间早上 8 点）自动执行一次
+    # 每天 UTC 时间 0 点自动执行一次（北京时间早上 8 点）
     - cron: '0 0 * * *'
-  workflow_dispatch: # 允许在 GitHub 网页端手动点击运行
+  workflow_dispatch: 
 
 jobs:
   update-file:
@@ -17,9 +17,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Fetch, Clean and Deduplicate IP list
-        # 下载 -> 删除回车符 -> 删除首尾行 -> 过滤空行并去重 -> 保存
+        # 下载 -> 删回车符 -> 删首尾行并【保留#号】去除Mia优选 -> 过滤空行去重 -> 保存
         run: |
-          curl -sL https://bestcf.pages.dev/xinyitang3/ipv4.txt | tr -d '\r' | sed '1d;$d' | awk 'NF && !seen[$0]++' > ipv4.txt
+          curl -sL https://bestcf.pages.dev/xinyitang3/ipv4.txt | tr -d '\r' | sed -e '1d;$d' -e 's/[Mm]ia优选//g' | awk 'NF && !seen[$0]++' > ipv4.txt
 
       - name: Commit and push if changed
         run: |
@@ -30,6 +30,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "文件内容无实质变化，无需提交"
           else
-            git commit -m "Auto-update: strip header/footer and deduplicate"
+            git commit -m "Auto-update: strip header/footer and remove Mia text, keep #"
             git push
           fi
