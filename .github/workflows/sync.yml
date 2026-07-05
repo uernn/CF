@@ -4,21 +4,22 @@ on:
   schedule:
     # 每天 UTC 时间 0 点（北京时间早上 8 点）自动执行一次
     - cron: '0 0 * * *'
-  workflow_dispatch: # 允许你在 GitHub 网页端手动点击运行
+  workflow_dispatch: # 允许在 GitHub 网页端手动点击运行
 
 jobs:
   update-file:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # 再次声明写入权限，确保万无一失
+      contents: write 
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Fetch and Deduplicate IP list
+      - name: Fetch, Clean and Deduplicate IP list
+        # 下载 -> 删除回车符 -> 删除首尾行 -> 过滤空行并去重 -> 保存
         run: |
-          curl -sL https://bestcf.pages.dev/xinyitang3/ipv4.txt | tr -d '\r' | awk 'NF && !seen[$0]++' > ipv4.txt
+          curl -sL https://bestcf.pages.dev/xinyitang3/ipv4.txt | tr -d '\r' | sed '1d;$d' | awk 'NF && !seen[$0]++' > ipv4.txt
 
       - name: Commit and push if changed
         run: |
@@ -27,8 +28,8 @@ jobs:
           git add ipv4.txt
           
           if git diff --staged --quiet; then
-            echo "文件内容与昨日相同，无需重复提交"
+            echo "文件内容无实质变化，无需提交"
           else
-            git commit -m "Auto-update and deduplicate ipv4.txt"
+            git commit -m "Auto-update: strip header/footer and deduplicate"
             git push
           fi
