@@ -17,9 +17,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Fetch, Clean and Deduplicate IP list
-        # 1. 下载 -> 2. 删回车符 -> 3. 删首尾行并【保留#号】去除Mia优选 -> 4. 【关键】删除地区后的IP -> 5. 过滤空行去重 -> 保存
+        # 1.下载 -> 2.删回车符 -> 3.删首尾行并去除Mia优选 -> 4.删尾部IP -> 5.【关键】删所有空格和| -> 6.去重 -> 保存
         run: |
-          curl -sL https://bestcf.pages.dev/xinyitang3/ipv4.txt | tr -d '\r' | sed -e '1d;$d' -e 's/[Mm]ia优选//g' -e 's/ | [^ |]*$//' | awk 'NF && !seen[$0]++' > ipv4.txt
+          curl -sL https://bestcf.pages.dev/xinyitang3/ipv4.txt | tr -d '\r' | sed -e '1d;$d' -e 's/[Mm]ia优选//g' -e 's/ | [^ |]*$//' -e 's/[ |]//g' | awk 'NF && !seen[$0]++' > ipv4.txt
 
       - name: Commit and push if changed
         run: |
@@ -30,6 +30,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "文件内容无实质变化，无需提交"
           else
-            git commit -m "Auto-update: strip header/footer, remove Mia text, remove trailing IP"
+            git commit -m "Auto-update: clean spaces and pipes"
             git push
           fi
