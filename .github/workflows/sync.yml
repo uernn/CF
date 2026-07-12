@@ -2,8 +2,8 @@ name: Auto Fetch & Deduplicate IPv4 List
 
 on:
   schedule:
-    # 每天 UTC 时间 0 点自动执行一次（北京时间早上 8 点）
-    - cron: '0 0 * * *'
+    # 每小时 UTC 时间 0 点自动执行一次（北京时间早上 8 点）
+    - cron: '0 * * * *'
   workflow_dispatch: 
 
 jobs:
